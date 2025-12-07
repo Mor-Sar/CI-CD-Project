@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Login • Study Cards</title>
+    <link rel="stylesheet" href="/static/style.css" />
+
+    <style>
+        .login-container {
+            width: 380px;
+            margin: 120px auto;
+            padding: 32px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+        }
+        .login-title {
+            font-size: 26px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .login-input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 16px 0;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+        }
+        .login-btn:hover {
+            background: #1d4ed8;
+        }
+        .error-msg {
+            color: #b91c1c;
+            margin-top: 10px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .back-home {
+            margin-top: 20px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .back-home a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-container">
+        <div class="login-title">Login</div>
+
+        <input id="emailInput" class="login-input" type="email" placeholder="Email" />
+        <input id="passwordInput" class="login-input" type="password" placeholder="Password" />
+
+        <button id="loginBtn" class="login-btn">Sign In</button>
+        <p id="loginError" class="form-error"></p>
+
+        <p class="form-helper">
+            Don’t have an account?
+            <a href="/register">Create one</a>
+        </p>
+
+        <p class="form-helper">
+            ← <a href="/">Back to homepage</a>
+        </p>
+
+
+        <div id="errorText" class="error-msg"></div>
+
+        <div class="back-home">
+            <a href="/">← Back to homepage</a>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+
+    <script>
+        document.getElementById("loginBtn").onclick = async function () {
+            const email = document.getElementById("emailInput").value.trim();
+            const password = document.getElementById("passwordInput").value.trim();
+            const errorBox = document.getElementById("errorText");
+
+            errorBox.textContent = "";
+
+            if (!email || !password) {
+                errorBox.textContent = "Please fill all fields.";
+                return;
+            }
+
+            const res = await fetch("/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+            });
+
+            if (!res.ok) {
+                errorBox.textContent = "Invalid credentials.";
+                return;
+            }
+
+            const data = await res.json();
+
+            // שמירה בלוקאל סטורג'
+            localStorage.setItem("authToken", data.token);
+            localStorage.setItem("currentUser", JSON.stringify(data.user));
+
+            // נחזור לדף הראשי
+            window.location.href = "/";
+        };
+    </script>
+
+</body>
+</html>

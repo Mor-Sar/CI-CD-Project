@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Register – Flashcards App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body class="auth-body">
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <h1 class="auth-title"> Join our students 🎓</h1>
+            <p class="auth-subtitle">create new user</p>
+
+            <form id="register-form" class="auth-form-vertical">
+                <label>
+                    Username
+                    <input type="text" id="reg-username" required>
+                </label>
+
+                <label>
+                    Email
+                    <input type="email" id="reg-email" required>
+                </label>
+
+                <label>
+                    Password
+                    <input type="password" id="reg-password" required>
+                </label>
+
+                <label>
+                    Confirm password
+                    <input type="password" id="reg-password2" required>
+                </label>
+
+                <button type="submit" class="primary-btn full-width">
+                    Register
+                </button>
+            </form>
+
+            <p class="auth-footer-text">
+               Do you have a user?
+                <a href="/login">Log in</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const form = document.getElementById("register-form");
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById("reg-username").value.trim();
+            const email = document.getElementById("reg-email").value.trim();
+            const pass1 = document.getElementById("reg-password").value;
+            const pass2 = document.getElementById("reg-password2").value;
+
+            if (!username || !email || !pass1) {
+                alert("Please fill in all required fields.");
+                return;
+            }
+
+            if (pass1 !== pass2) {
+                alert("The passwords don't match");
+                return;
+            }
+
+            try {
+                const res = await fetch("/auth/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        username: username,
+                        email: email,
+                        password: pass1,
+                    }),
+                });
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    alert("Registration failed: " + (err.error || res.status));
+                    return;
+                }
+
+                alert("You have successfully registered! Now you can log in.");
+                window.location.href = "/login";
+            } catch (err) {
+                console.error("Register error", err);
+                alert("Registration error, check console.");
+            }
+        });
+    });
+    </script>
+</body>
+</html>
