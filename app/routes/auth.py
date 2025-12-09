@@ -1,20 +1,16 @@
 # app/routes/auth.py
 
-import os
 import jwt
 from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify
+
 from ..models import User
 from .. import db
-
-
+from ..config import JWT_SECRET, JWT_EXPIRES_MINUTES
 
 # Blueprint לאנדפוינטים של Auth
 auth_bp = Blueprint("auth", __name__)
 
-# המפתח לחתימה על ה-JWT
-# אם יש בקובץ .env משתנה JWT_SECRET הוא ישתמש בו, אחרת ברירת מחדל (לפיתוח)
-JWT_SECRET = os.getenv("JWT_SECRET", "dev-super-secret-change-me")
 JWT_ALGORITHM = "HS256"
 
 
@@ -22,11 +18,11 @@ def create_token(user_id: int) -> str:
     """
     יוצר JWT שכולל:
     - user_id: מזהה המשתמש
-    - exp: תאריך תפוגה (עוד 6 שעות)
+    - exp: תאריך תפוגה (לפי JWT_EXPIRES_MINUTES מתוך config)
     """
     payload = {
         "user_id": user_id,
-        "exp": datetime.utcnow() + timedelta(hours=6),
+        "exp": datetime.utcnow() + timedelta(minutes=JWT_EXPIRES_MINUTES),
     }
 
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
@@ -41,7 +37,9 @@ def create_token(user_id: int) -> str:
 def get_token_from_header():
     """
     מוציא את הטוקן מה-Authorization header.
-    מצפה לפורמט:  Authorization: Bearer <token>
+    תומך גם בפורמט:
+      Authorization: Bearer <token>
+    וגם במצב שבו ה-frontend שולח את הטוקן עצמו בלי Bearer.
     """
     auth_header = request.headers.get("Authorization", "")
     if auth_header.startswith("Bearer "):
@@ -117,6 +115,8 @@ def me():
     """
     מחזיר את פרטי המשתמש הנוכחי לפי הטוקן.
     צריך לשלוח Header:
+    Authorization: <token>
+    או:
     Authorization: Bearer <token>
     """
     token = get_token_from_header()
@@ -134,5 +134,3 @@ def me():
     user = User.query.get(data["user_id"])
     if not user:
         return jsonify({"error": "user not found"}), 404
-
-    return jsonify(user.to_dict()), 200

@@ -7,6 +7,8 @@ try:
 except ImportError:
     OpenAI = None
 
+
+# initialize client only if allowed and available
 client = None
 if AI_ENABLED and OpenAI is not None:
     client = OpenAI(api_key=OPENAI_API_KEY)
@@ -30,12 +32,16 @@ def generate_dummy_content(topic: str, card_type: str) -> str:
 
 
 def generate_ai_content(topic: str, card_type: str) -> str:
+    """
+    Try generating real content using OpenAI API.
+    If the API is unavailable or errors occur, fallback to dummy content.
+    """
     if client is None:
         return generate_dummy_content(topic, card_type)
 
     system_prompt = (
-        "You generate concise, structured study materials: flashcards, summaries, quizzes, "
-        "tasks, usecases and mindmaps."
+        "You generate concise and structured study materials: flashcards, "
+        "summaries, quizzes, tasks, usecases and mindmaps."
     )
 
     user_prompt = f"""
@@ -47,23 +53,29 @@ Required format:
 - quiz: question + 4 options + mark correct answer
 - task: small hands-on exercise
 - usecase: 1–2 paragraphs
-- mindmap: text structure like:
+- mindmap: text outline like:
   Topic
   - Subtopic A
     - Detail 1
   - Subtopic B
 """
 
-    completion = client.chat.completions.create(
-        model=OPENAI_MODEL,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ],
-        temperature=0.7,
-    )
+    try:
+        completion = client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            temperature=0.7,
+        )
 
-    return completion.choices[0].message.content.strip()
+        content = completion.choices[0].message.content
+        return content.strip()
+
+    except Exception as e:
+        # fallback: avoid crashing the app
+        return generate_dummy_content(topic, card_type)
 
 
 def generate_content(topic: str, card_type: str, mode="dummy"):

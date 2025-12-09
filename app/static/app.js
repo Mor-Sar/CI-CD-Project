@@ -486,7 +486,7 @@ document.addEventListener("DOMContentLoaded", () => {
       : new Headers(options.headers || {});
 
     if (authToken && typeof input === "string" && input.startsWith("/")) {
-      options.headers.set("Authorization", authToken);
+      options.headers.set("Authorization", "Bearer " + authToken);
     }
 
     return originalFetch(input, options);

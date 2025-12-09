@@ -10,30 +10,32 @@
 <body>
     <div class="app-shell">
         <!-- TOP BAR -->
-         <header class="top-bar">
+        <header class="top-bar">
             <div class="top-left">
                 <h1 class="app-title">Study Cards</h1>
-                <p class="app-subtitle">Create smart flashcards, summaries and quizzes for your study topics.</p>
+                <p class="app-subtitle">
+                    Create smart flashcards, summaries and quizzes for your study topics.
+                </p>
             </div>
 
             <div class="top-right">
-            <span id="userInfoLabel" class="user-info">Not logged in</span>
+                <!-- אלו ה־IDs שה-app.js מצפה להם -->
+                <span id="userInfoLabel" class="user-info">Not logged in</span>
 
-            <a id="loginLink" href="/login" class="btn ghost small">
-            Login
-            </a>
+                <a id="loginLink" href="/login" class="btn ghost small">
+                    Login
+                </a>
 
-            <button id="logoutBtn" class="btn ghost small" style="display: none;">
-            Logout
-            </button>
+                <button id="logoutBtn" class="btn ghost small" style="display: none;">
+                    Logout
+                </button>
 
-            <span id="healthStatus" class="badge badge-gray">
-            Checking backend...
-            </span>
+                <span id="healthStatus" class="badge badge-gray">
+                    Checking backend...
+                </span>
             </div>
         </header>
 
-    
         <!-- MAIN LAYOUT -->
         <main class="layout">
             <!-- LEFT COLUMN: TOPICS -->
@@ -43,9 +45,10 @@
                     <form id="topic-form" class="form-vertical">
                         <label>
                             Topic name
+                            <!-- app.js מחפש topicInput -->
                             <input
                                 type="text"
-                                id="topic-name"
+                                id="topicInput"
                                 placeholder="e.g. Docker volumes"
                                 required
                             />
@@ -53,42 +56,57 @@
 
                         <div class="chip-group">
                             <label class="chip">
-                                <input type="checkbox" name="format" value="flashcard" checked>
+                                <input type="checkbox" class="format-checkbox" value="flashcard" checked>
                                 Flashcard
                             </label>
                             <label class="chip">
-                                <input type="checkbox" name="format" value="summary" checked>
+                                <input type="checkbox" class="format-checkbox" value="summary" checked>
                                 Summary
                             </label>
                             <label class="chip">
-                                <input type="checkbox" name="format" value="quiz">
+                                <input type="checkbox" class="format-checkbox" value="quiz">
                                 Quiz
                             </label>
                             <label class="chip">
-                                <input type="checkbox" name="format" value="task">
+                                <input type="checkbox" class="format-checkbox" value="task">
                                 Task
                             </label>
                             <label class="chip">
-                                <input type="checkbox" name="format" value="usecase">
+                                <input type="checkbox" class="format-checkbox" value="usecase">
                                 Usecase
                             </label>
                             <label class="chip">
-                                <input type="checkbox" name="format" value="mindmap">
+                                <input type="checkbox" class="format-checkbox" value="mindmap">
                                 Mindmap
                             </label>
                         </div>
 
-                        <button type="submit" class="primary-btn full-width">
+                        <!-- בחירה בין dummy ל-AI (app.js כבר יודע לעבוד עם mode) -->
+                        <div class="mode-row">
+                            <label>
+                                <input type="radio" name="mode" value="dummy" checked>
+                                Dummy mode
+                            </label>
+                            <label>
+                                <input type="radio" name="mode" value="ai">
+                                AI mode
+                            </label>
+                        </div>
+
+                        <!-- app.js מחפש createBtn -->
+                        <button type="button" id="createBtn" class="primary-btn full-width">
                             Create Topic
                         </button>
                     </form>
-                    <div id="topic-form-message" class="message"></div>
+
+                    <!-- app.js מצפה ל-createStatus -->
+                    <div id="createStatus" class="message"></div>
                 </div>
 
                 <div class="pane-card">
                     <h2>My Topics</h2>
-                    <ul id="topics-list" class="topics-list"></ul>
-                    <div id="topics-empty-message" class="message small"></div>
+                    <!-- app.js מחפש topicsList -->
+                    <ul id="topicsList" class="topics-list"></ul>
                 </div>
             </section>
 
@@ -96,11 +114,13 @@
             <section class="pane pane-right">
                 <div class="pane-card">
                     <div class="pane-header-row">
-                        <h2 id="cards-title">Your topic flashcards</h2>
+                        <!-- app.js מחפש cardsTitle -->
+                        <h2 id="cardsTitle">Your topic flashcards</h2>
 
                         <div class="filter-row">
-                            <label for="card-type-filter">Filter</label>
-                            <select id="card-type-filter">
+                            <label for="cardTypeFilter">Filter</label>
+                            <!-- app.js מחפש cardTypeFilter -->
+                            <select id="cardTypeFilter">
                                 <option value="">All</option>
                                 <option value="flashcard">Flashcard</option>
                                 <option value="summary">Summary</option>
@@ -112,224 +132,14 @@
                         </div>
                     </div>
 
-                    <div id="cards-container" class="cards-grid"></div>
-                    <div id="cards-empty-message" class="message small"></div>
+                    <!-- app.js מחפש cardsContainer -->
+                    <div id="cardsContainer" class="cards-grid"></div>
                 </div>
             </section>
         </main>
+
+        <!-- toast קטן להודעות (app.js משתמש בו אם קיים) -->
+        <div id="toast" class="toast hidden"></div>
     </div>
-
-    <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const authLabel = document.getElementById("auth-status-label");
-        const logoutBtn = document.getElementById("logout-btn");
-
-        const topicForm = document.getElementById("topic-form");
-        const topicNameInput = document.getElementById("topic-name");
-        const topicFormMessage = document.getElementById("topic-form-message");
-
-        const topicsListEl = document.getElementById("topics-list");
-        const topicsEmptyMsg = document.getElementById("topics-empty-message");
-
-        const cardsTitleEl = document.getElementById("cards-title");
-        const cardsContainer = document.getElementById("cards-container");
-        const cardsEmptyMsg = document.getElementById("cards-empty-message");
-        const cardTypeFilter = document.getElementById("card-type-filter");
-
-        let selectedTopicId = null;
-        let allTopics = [];
-
-        function getCurrentUserSafe() {
-            try {
-                if (window.getCurrentUser) return window.getCurrentUser();
-            } catch (e) {}
-            return null;
-        }
-
-        function refreshAuthUI() {
-            const user = getCurrentUserSafe();
-            if (user) {
-                authLabel.textContent = "Your logged in as: " + (user.username || user.email);
-                logoutBtn.style.display = "inline-flex";
-            } else {
-                authLabel.innerHTML = 'לא מחוברת. <a href="/login">to log in</a>';
-                logoutBtn.style.display = "none";
-            }
-        }
-
-        // אם אין משתמש – נעביר ל-/login
-        const initialUser = getCurrentUserSafe();
-        if (!initialUser) {
-            window.location.href = "/login";
-            return;
-        }
-        refreshAuthUI();
-
-        logoutBtn.addEventListener("click", () => {
-            if (window.logoutAuth) window.logoutAuth();
-            window.location.href = "/login";
-        });
-
-        // ==== TOPICS / CARDS ====
-        async function loadTopics() {
-            try {
-                const res = await fetch("/topics");
-                if (!res.ok) {
-                    topicsEmptyMsg.textContent = "Loading error topics";
-                    return;
-                }
-                allTopics = await res.json();
-                renderTopics();
-            } catch (err) {
-                console.error("Error loading topics", err);
-                topicsEmptyMsg.textContent = "Loading error topics";
-            }
-        }
-
-        function renderTopics() {
-            topicsListEl.innerHTML = "";
-            topicsEmptyMsg.textContent = "";
-
-            if (!allTopics || allTopics.length === 0) {
-                topicsEmptyMsg.textContent = "No topics yet";
-                return;
-            }
-
-            allTopics.forEach(topic => {
-                const li = document.createElement("li");
-                li.className = "topic-item";
-                li.textContent = topic.name;
-                li.dataset.id = topic.id;
-
-                if (topic.id === selectedTopicId) {
-                    li.classList.add("active");
-                }
-
-                li.addEventListener("click", () => {
-                    selectedTopicId = topic.id;
-                    cardsTitleEl.textContent = `Flashcards for: ${topic.name}`;
-                    renderTopics();
-                    loadCardsForTopic(topic.id);
-                });
-
-                topicsListEl.appendChild(li);
-            });
-        }
-
-        async function loadCardsForTopic(topicId) {
-            if (!topicId) return;
-
-            const typeFilter = cardTypeFilter.value;
-            let url = `/topics/${topicId}/cards`;
-            if (typeFilter) {
-                url += `?type=${encodeURIComponent(typeFilter)}`;
-            }
-
-            try {
-                const res = await fetch(url);
-                if (!res.ok) {
-                    cardsEmptyMsg.textContent = "Error loading flashcards";
-                    return;
-                }
-                const cards = await res.json();
-                renderCards(cards);
-            } catch (err) {
-                console.error("Error loading cards", err);
-                cardsEmptyMsg.textContent = "Error loading flashcards";
-            }
-        }
-
-        function renderCards(cards) {
-            cardsContainer.innerHTML = "";
-            cardsEmptyMsg.textContent = "";
-
-            if (!cards || cards.length === 0) {
-                cardsEmptyMsg.textContent = "No flashcards for this topic";
-                return;
-            }
-
-            cards.forEach(card => {
-                const div = document.createElement("div");
-                div.className = "flashcard";
-
-                // צבע לפי סוג
-                div.classList.add(`flashcard-${card.card_type}`);
-
-                const typeEl = document.createElement("div");
-                typeEl.className = "flashcard-type";
-                typeEl.textContent = card.card_type;
-
-                const contentEl = document.createElement("pre");
-                contentEl.className = "flashcard-content";
-                contentEl.textContent = card.content;
-
-                div.appendChild(typeEl);
-                div.appendChild(contentEl);
-                cardsContainer.appendChild(div);
-            });
-        }
-
-        cardTypeFilter.addEventListener("change", () => {
-            if (selectedTopicId) {
-                loadCardsForTopic(selectedTopicId);
-            }
-        });
-
-        topicForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            topicFormMessage.textContent = "";
-
-            const topicName = topicNameInput.value.trim();
-            if (!topicName) {
-                topicFormMessage.textContent = "Please enter topic name";
-                return;
-            }
-
-            const formatInputs = topicForm.querySelectorAll("input[name='format']:checked");
-            const formats = Array.from(formatInputs).map(inp => inp.value);
-            if (formats.length === 0) {
-                topicFormMessage.textContent = "Please choose at least one format";
-                return;
-            }
-
-            try {
-                const res = await fetch("/topics", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        topic: topicName,
-                        formats: formats
-                    }),
-                });
-
-                if (!res.ok) {
-                    const errText = await res.text();
-                    console.error("Failed to create topic", res.status, errText);
-                    topicFormMessage.textContent = "Error creating topic";
-                    return;
-                }
-
-                const data = await res.json();
-                topicFormMessage.textContent = "Topic created successfully";
-                topicNameInput.value = "";
-
-                if (data.topic) {
-                    allTopics.push(data.topic);
-                    renderTopics();
-                } else {
-                    await loadTopics();
-                }
-
-            } catch (err) {
-                console.error("Error creating topic", err);
-                    topicFormMessage.textContent = "Error creating topic";
-                topicFormMessage.textContent = "";
-            }
-        });
-
-        // INIT
-        loadTopics();
-    });
-    </script>
 </body>
 </html>

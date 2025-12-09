@@ -1,4 +1,4 @@
-/* ===== בסיס כללי ===== */
+/* ==== Base layout ==== */
 
 *,
 *::before,
@@ -6,301 +6,220 @@
   box-sizing: border-box;
 }
 
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
 body {
-  margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #222;
-
-  /* שכבות רקע:
-     1) SVG של לימודים + נוסחאות
-     2–3) גרדיאנטים רכים
-     4) צבע בסיס בהיר
-  */
-  background:
-  url("bg-study-math.svg") center/cover fixed no-repeat,
-  radial-gradient(circle at top left, #ffe7f0, transparent 55%),
-  radial-gradient(circle at bottom right, #e1f0ff, transparent 55%),
-  #f5f6ff;
-
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+               sans-serif;
+  color: #0f172a;
+  background: radial-gradient(circle at top left, #e0f2fe, #f9fafb 45%, #fee2e2);
 }
 
-
-/* ===== כפתורים ===== */
-
-button {
-  font-family: inherit;
-  cursor: pointer;
-  border: none;
-}
-
-.primary-btn {
-  background: #5c6dfc;
-  color: white;
-  border-radius: 999px;
-  padding: 0.6rem 1.4rem;
-  font-weight: 600;
-  border: none;
-  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.1s ease;
-}
-
-.primary-btn:hover {
-  background: #4958e0;
-  box-shadow: 0 6px 18px rgba(76, 91, 255, 0.35);
-  transform: translateY(-1px);
-}
-
-.secondary-btn {
-  background: white;
-  color: #444;
-  border-radius: 999px;
-  padding: 0.4rem 1rem;
-  font-weight: 500;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  transition: background 0.08s ease, transform 0.08s ease;
-}
-
-.secondary-btn:hover {
-  background: #f3f3ff;
-  transform: translateY(-1px);
-}
-
-.full-width {
-  width: 100%;
-}
-
-/* ===== דפי Auth (login/register) ===== */
-
-.auth-body {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background:
-  url("bg-study-math.svg") center/cover fixed no-repeat,
-  radial-gradient(circle at top left, #ffe7f0, transparent 55%),
-  radial-gradient(circle at bottom right, #e1f0ff, transparent 55%),
-  #f5f6ff;
-}
-
-.auth-wrapper {
-  width: 100%;
-  max-width: 420px;
-  padding: 1.5rem;
-}
-
-.auth-card {
-  background: white;
-  border-radius: 24px;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
-  padding: 2.2rem 2rem 1.8rem;
-}
-
-.auth-title {
-  margin: 0 0 0.4rem;
-  font-size: 1.6rem;
-  text-align: center;
-}
-
-.auth-subtitle {
-  margin: 0 0 1.4rem;
-  text-align: center;
-  color: #666;
-}
-
-.auth-form-vertical {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-  margin-bottom: 1.3rem;
-}
-
-.auth-form-vertical label {
-  font-size: 0.9rem;
-  color: #444;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.auth-form-vertical input {
-  padding: 0.55rem 0.7rem;
-  border-radius: 12px;
-  border: 1px solid #d0d4ff;
-  outline: none;
-  font-size: 0.95rem;
-}
-
-.auth-form-vertical input:focus {
-  border-color: #5c6dfc;
-  box-shadow: 0 0 0 1px rgba(92, 109, 252, 0.2);
-}
-
-.auth-footer-text {
-  margin: 0;
-  text-align: center;
-  font-size: 0.9rem;
-  color: #555;
-}
-
-.auth-footer-text a {
-  color: #5c6dfc;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.auth-footer-text a:hover {
-  text-decoration: underline;
-}
-
-/* ===== אפליקציה ראשית ===== */
+/* ==== App shell ==== */
 
 .app-shell {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  width: min(1200px, 100% - 40px);
+  margin: 0 auto;
+  padding: 32px 0 40px;
 }
 
-/* TOP BAR */
+/* ==== Top bar ==== */
 
 .top-bar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 0.9rem 1.8rem;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  gap: 24px;
+  margin-bottom: 24px;
 }
 
-.brand {
+.app-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.app-subtitle {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.top-right {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: 12px;
+  font-size: 14px;
 }
 
-.brand-logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #ff8ba7, #ffc46b);
-  display: flex;
+.user-info {
+  color: #374151;
+}
+
+/* ==== Buttons & badges ==== */
+
+.btn,
+.primary-btn {
+  border: none;
+  border-radius: 999px;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 14px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #1f2933;
-  font-weight: 800;
-  font-size: 1.1rem;
-  box-shadow: 0 12px 25px rgba(248, 113, 113, 0.45);
-}
-
-.brand-text h1 {
-  margin: 0;
-  font-size: 1.3rem;
-}
-
-.brand-text p {
-  margin: 0;
-  font-size: 0.85rem;
-  color: #64748b;
-}
-
-.user-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-}
-
-.user-label {
-  font-size: 0.9rem;
-  color: #475569;
-}
-
-.user-label a {
-  color: #5c6dfc;
+  gap: 6px;
   text-decoration: none;
+  white-space: nowrap;
 }
 
-/* MAIN LAYOUT */
+.primary-btn {
+  background: #4f46e5;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.primary-btn:hover {
+  background: #4338ca;
+}
+
+.btn.ghost {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.btn.ghost:hover {
+  background: #e0e7ff;
+}
+
+.btn.small,
+.primary-btn.full-width {
+  font-size: 13px;
+}
+
+.primary-btn.full-width {
+  width: 100%;
+  padding: 10px 16px;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.badge-gray {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.badge-green {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge-red {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ==== Main layout: two panes ==== */
 
 .layout {
-  flex: 1;
   display: grid;
-  grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
-  gap: 1.4rem;
-  padding: 1.4rem 1.8rem 1.8rem;
+  grid-template-columns: 320px 1fr;
+  gap: 24px;
+  align-items: flex-start;
 }
 
 .pane {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 16px;
 }
 
 .pane-card {
-  background: white;
-  border-radius: 20px;
-  padding: 1.3rem 1.2rem 1.2rem;
-  box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 24px;
+  padding: 20px 20px 22px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
 }
 
-.pane-card h2 {
-  margin: 0 0 0.9rem;
-  font-size: 1.1rem;
-}
+/* ==== Forms & inputs ==== */
 
-/* טופס Topic */
-
-.form-vertical {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
+h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
 }
 
 .form-vertical label {
-  font-size: 0.9rem;
+  display: block;
+  font-size: 13px;
   color: #4b5563;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
+  margin-bottom: 8px;
 }
 
-.form-vertical input[type="text"] {
-  padding: 0.55rem 0.7rem;
-  border-radius: 12px;
-  border: 1px solid #d4d4ff;
+.form-vertical input[type="text"],
+.form-vertical input[type="email"],
+.form-vertical input[type="password"],
+select {
+  width: 100%;
+  padding: 9px 11px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  font-size: 14px;
   outline: none;
-  font-size: 0.95rem;
+  background: #f9fafb;
 }
 
-.form-vertical input[type="text"]:focus {
-  border-color: #5c6dfc;
-  box-shadow: 0 0 0 1px rgba(92, 109, 252, 0.2);
+.form-vertical input:focus,
+select:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.25);
 }
+
+/* ==== Chips (card types) ==== */
 
 .chip-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 8px;
+  margin: 10px 0 16px;
 }
 
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.25rem 0.6rem;
+  gap: 6px;
+  padding: 6px 10px;
   border-radius: 999px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  font-size: 0.8rem;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  font-size: 12px;
+  cursor: pointer;
 }
 
-.chip input {
-  transform: scale(0.9);
+.chip input[type="checkbox"] {
+  margin: 0;
 }
 
-/* רשימת Topics */
+/* ==== Mode radio ==== */
+
+.mode-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+/* ==== Topics list ==== */
 
 .topics-list {
   list-style: none;
@@ -308,147 +227,243 @@ button {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  max-height: 420px;
+  gap: 6px;
+  max-height: 260px;
   overflow-y: auto;
 }
 
-.topic-item {
-  padding: 0.45rem 0.7rem;
-  border-radius: 12px;
+.topics-list li {
+  padding: 8px 10px;
+  border-radius: 999px;
   background: #f9fafb;
+  font-size: 13px;
   cursor: pointer;
-  font-size: 0.9rem;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  transition: background 0.08s ease, transform 0.08s ease;
+  align-items: center;
 }
 
-.topic-item:hover {
+.topics-list li.active {
   background: #eef2ff;
-  transform: translateY(-1px);
+  color: #4338ca;
+  font-weight: 500;
 }
 
-.topic-item.active {
-  background: #6366f1;
-  color: white;
+.topic-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* כרטיסיות (Flashcards) */
+.topic-meta {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-left: 8px;
+}
+
+/* ==== Cards area ==== */
 
 .pane-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.7rem;
-  margin-bottom: 0.8rem;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .filter-row {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
-  font-size: 0.85rem;
+  gap: 6px;
+  font-size: 13px;
 }
 
-.filter-row select {
-  padding: 0.3rem 0.5rem;
+#cardTypeFilter {
   border-radius: 999px;
-  border: 1px solid #cbd5f5;
-  font-size: 0.85rem;
+  padding: 6px 24px 6px 10px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  font-size: 13px;
 }
+
+/* Cards grid */
 
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
 }
 
-/* כרטיס לימוד */
+/* Single card */
 
-.flashcard {
+.card {
+  background: #f9fafb;
   border-radius: 18px;
-  padding: 0.8rem 0.85rem;
-  background: #ffffff;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  padding: 12px 12px 10px;
+  border: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 8px;
 }
 
-/* צבעים לכל סוג */
-
-.flashcard-flashcard {
-  background: #fff7cd;
-  border-color: #facc15;
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: 12px;
+  color: #6b7280;
 }
 
-.flashcard-summary {
-  background: #dbeafe;
-  border-color: #60a5fa;
+.card-type-pill {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #e0e7ff;
+  color: #3730a3;
+  font-size: 11px;
+  font-weight: 500;
 }
 
-.flashcard-quiz {
-  background: #fdf2ff;
-  border-color: #e879f9;
+.card-meta {
+  font-size: 11px;
+  color: #9ca3af;
 }
 
-.flashcard-task {
-  background: #dcfce7;
-  border-color: #4ade80;
-}
+/* Content inside card */
 
-.flashcard-usecase {
-  background: #fee2e2;
-  border-color: #f97373;
-}
-
-.flashcard-mindmap {
-  background: #ede9fe;
-  border-color: #a855f7;
-}
-
-.flashcard-type {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: 700;
-  color: #334155;
-}
-
-.flashcard-content {
+.card-content {
   margin: 0;
-  white-space: pre-wrap;
-  font-size: 0.9rem;
-  line-height: 1.25rem;
-  color: #1f2937;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: pre-wrap;  /* לא לשבור שורה לחוץ מהקונטיינר */
+  word-break: break-word;
 }
 
-/* הודעות */
+/* Card actions */
+
+.card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+/* === Toast === */
+
+.toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #111827;
+  color: #f9fafb;
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.toast.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.toast.hidden {
+  display: none;
+}
+
+/* ==== Auth pages (login / register) ==== */
+
+.auth-body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top left, #e0f2fe, #f9fafb 45%, #fee2e2);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+               sans-serif;
+}
+
+.auth-wrapper {
+  width: min(420px, 100% - 40px);
+}
+
+.auth-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 24px 22px 26px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+}
+
+.auth-title {
+  margin: 0 0 4px;
+  font-size: 24px;
+}
+
+.auth-subtitle {
+  margin: 0 0 16px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.auth-form-vertical label {
+  display: block;
+  font-size: 13px;
+  color: #4b5563;
+  margin-bottom: 10px;
+}
+
+.auth-form-vertical input[type="text"],
+.auth-form-vertical input[type="email"],
+.auth-form-vertical input[type="password"] {
+  width: 100%;
+  padding: 9px 11px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  font-size: 14px;
+  outline: none;
+  background: #f9fafb;
+}
+
+.auth-form-vertical input:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.25);
+}
+
+.auth-footer-text {
+  margin-top: 16px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.auth-footer-text a {
+  color: #4f46e5;
+  text-decoration: none;
+}
+
+.auth-footer-text a:hover {
+  text-decoration: underline;
+}
+
+/* ==== Small helpers ==== */
 
 .message {
-  margin-top: 0.5rem;
-  font-size: 0.85rem;
-  color: #64748b;
+  font-size: 13px;
+  margin-top: 8px;
+  color: #4b5563;
 }
 
 .message.small {
-  font-size: 0.8rem;
-  color: #94a3b8;
+  font-size: 12px;
+  color: #6b7280;
 }
 
-/* רספונסיביות */
+/* ==== Responsive ==== */
 
 @media (max-width: 900px) {
   .layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .pane-left,
-  .pane-right {
-    max-width: 700px;
-    margin: 0 auto;
+    grid-template-columns: 1fr;
   }
 }
