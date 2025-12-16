@@ -1,15 +1,15 @@
 services:
   flask_app_1:
     build: .
-    expose:
-      - "5000"
+    ports:
+      - "5001:5000"
     networks:
       - flashcards_net
 
   flask_app_2:
     build: .
-    expose:
-      - "5000"
+    ports:
+      - "5002:5000"
     networks:
       - flashcards_net
 
