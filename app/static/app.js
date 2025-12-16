@@ -349,16 +349,25 @@ async function createTopicAndCards() {
 
     createBtn.disabled = false;
 
-    if (status === 201) {
-        statusEl.textContent = `Created topic "${data.topic.name}" with ${data.cards.length} cards.`;
+    if (status === 201 || status === 200) {
+    // הודעה מהשרת (אם קיימת)
+        if (data.message) {
+            showToast(data.message, "info");
+            statusEl.textContent = data.message;
+    }   else {
+            const created = data.created_card_types?.length || 0;
+            showToast(`Created ${created} new card(s)`, "success");
+            statusEl.textContent = `Created ${created} new card(s).`;
+    }
+
         topicInput.value = "";
-        showToast("Topic created", "success");
         await loadTopics();
-    } else {
+    }else {
         const msg = data && data.error ? data.error : "Unknown error";
         statusEl.textContent = `Error (${status}): ${msg}`;
         showToast(`Error creating topic (${status})`, "error");
     }
+
 }
 
 // Global summaries
