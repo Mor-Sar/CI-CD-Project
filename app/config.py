@@ -14,16 +14,16 @@ if os.path.exists(ENV_PATH):
 #SQLALCHEMY_DATABASE_URI = f"sqlite:///{DB_PATH}"
 #SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-# ---- Database (PostgreSQL) ----
-POSTGRES_DB = os.getenv("POSTGRES_DB", "flashcards")
-POSTGRES_USER = os.getenv("POSTGRES_USER", "flashcards_user")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "flashcards_pass")
-POSTGRES_HOST = os.getenv("POSTGRES_HOST", "postgres")  # שם ה-service ב-docker-compose
-POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
+# ---- Database (MariaDB / MySQL) ----
+MYSQL_DB = os.getenv("MYSQL_DB", "flashcards")
+MYSQL_USER = os.getenv("MYSQL_USER", "flashcards_user")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "flashcards_pass")
+MYSQL_HOST = os.getenv("MYSQL_HOST", "mariadb")  # שם ה-service ב-docker-compose
+MYSQL_PORT = os.getenv("MYSQL_PORT", "3306")
 
 SQLALCHEMY_DATABASE_URI = (
-    f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}"
-    f"@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+    f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}"
+    f"@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
 )
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 

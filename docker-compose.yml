@@ -1,15 +1,16 @@
 version: "3.9"
 
 services:
-  postgres:
-    image: postgres:16
-    container_name: postgres_db
+  mariadb:
+    image: mariadb:11
+    container_name: mariadb_db
     environment:
-      POSTGRES_DB: flashcards
-      POSTGRES_USER: flashcards_user
-      POSTGRES_PASSWORD: flashcards_pass
+      MARIADB_DATABASE: flashcards
+      MARIADB_USER: flashcards_user
+      MARIADB_PASSWORD: flashcards_pass
+      MARIADB_ROOT_PASSWORD: root_pass_change_me
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mariadb_data:/var/lib/mysql
     networks:
       - flashcards_net
 
@@ -21,7 +22,7 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres
+      - mariadb
     networks:
       - flashcards_net
 
@@ -42,4 +43,4 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data:
+  mariadb_data:
