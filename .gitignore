@@ -7,11 +7,14 @@ __pycache__/
 # Virtual env
 venv/
 .env/
+.env 
 
 
 
 # SQLite DB
 app.db
+*.db
+*.sqlite
 *.sqlite3
 
 # VSCode

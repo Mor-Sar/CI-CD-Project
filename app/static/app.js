@@ -112,9 +112,18 @@ async function loadTopics() {
         const metaEl = document.createElement("span");
         metaEl.className = "topic-meta";
         metaEl.textContent = `#${topic.id}`;
+        const delBtn = document.createElement("button");
+        delBtn.className = "btn ghost small";
+        delBtn.textContent = "Delete";
+        delBtn.style.marginLeft = "8px";
+        delBtn.onclick = (ev) => {
+            ev.stopPropagation(); // שלא יבחר את הטופיק בלחיצה על כפתור
+            deleteTopic(topic.id);
+        };
 
         li.appendChild(nameEl);
         li.appendChild(metaEl);
+        li.appendChild(delBtn);
 
         li.onclick = () => {
             selectedTopicId = topic.id;
@@ -312,6 +321,37 @@ async function deleteCard(cardId) {
         showToast(`Error deleting card (${status})`, "error");
     }
 }
+
+// Delete topic (and all its cards)
+async function deleteTopic(topicId) {
+    if (!confirm(`Delete topic #${topicId} and ALL its cards?`)) return;
+
+    const { status, data } = await fetchJSON(`/topics/${topicId}`, {
+        method: "DELETE",
+    });
+
+    if (status === 200) {
+        showToast("Topic deleted", "success");
+
+        // אם מחקנו את הטופיק שנבחר כרגע — לאפס בחירה
+        if (selectedTopicId === topicId) {
+            selectedTopicId = null;
+            currentCards = [];
+            updateTopicsSelection();
+
+            const container = document.getElementById("cardsContainer");
+            if (container) {
+                container.innerHTML = "<p class='placeholder'>Select a topic</p>";
+            }
+        }
+
+        await loadTopics();
+    } else {
+        const msg = data && data.error ? data.error : `Error deleting topic (${status})`;
+        showToast(msg, "error");
+    }
+}
+
 
 // Create topic + cards
 async function createTopicAndCards() {

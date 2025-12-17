@@ -152,3 +152,17 @@ def get_topic_cards(current_user, topic_id):
 
     cards = query.all()
     return jsonify([c.to_dict() for c in cards]), 200
+
+
+
+@topics_bp.route("/topics/<int:topic_id>", methods=["DELETE"])
+@require_user
+def delete_topic(current_user, topic_id):
+    topic = Topic.query.filter_by(id=topic_id, user_id=current_user.id).first()
+    if not topic:
+        return jsonify({"error": "Topic not found"}), 404
+
+    db.session.delete(topic)
+    db.session.commit()
+    return jsonify({"message": "Topic deleted", "topic_id": topic_id}), 200
+
