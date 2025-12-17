@@ -13,6 +13,11 @@ services:
       - mariadb_data:/var/lib/mysql
     networks:
       - flashcards_net
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -uroot -p$$MARIADB_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   flask_app:
     build: .
@@ -22,7 +27,8 @@ services:
     env_file:
       - .env
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
     networks:
       - flashcards_net
 
