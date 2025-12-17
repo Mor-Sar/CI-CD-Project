@@ -1,17 +1,11 @@
 services:
-  flask_app_1:
+  flask_app:
     build: .
     ports:
       - "5001:5000"
     networks:
       - flashcards_net
 
-  flask_app_2:
-    build: .
-    ports:
-      - "5002:5000"
-    networks:
-      - flashcards_net
 
   nginx:
     image: nginx:latest
