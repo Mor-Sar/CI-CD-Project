@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: ["sarah-new"]
+  pull_request:
+    branches: ["sarah-new"]
+
+jobs:
+  compose-smoke-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create .env for CI (from Secrets)
+        run: |
+          cat > .env << 'EOF'
+          MYSQL_DB=flashcards
+          MYSQL_USER=flashcards_user
+          MYSQL_PASSWORD=flashcards_pass
+          MYSQL_HOST=mariadb
+          MYSQL_PORT=3306
+          JWT_SECRET=ci-secret
+          JWT_EXPIRES_MINUTES=60
+          AI_PROVIDER=gemini
+          GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL=gemini-2.0-flash
+          OPENAI_API_KEY=dummy
+          OPENAI_MODEL=gpt-4.1-mini
+          EOF
+
+      - name: Build and start
+        run: docker compose up -d --build
+
+      - name: Show status
+        run: docker compose ps
+
+      - name: Wait for app and smoke test
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:5000/ > /dev/null; then
+              echo "App is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "App did not become ready"
+          docker compose logs --tail=200
+          exit 1
+
+      - name: Shutdown
+        if: always()
+        run: docker compose down -v
