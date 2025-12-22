@@ -112,9 +112,18 @@ async function loadTopics() {
         const metaEl = document.createElement("span");
         metaEl.className = "topic-meta";
         metaEl.textContent = `#${topic.id}`;
+        const delBtn = document.createElement("button");
+        delBtn.className = "btn ghost small";
+        delBtn.textContent = "Delete";
+        delBtn.style.marginLeft = "8px";
+        delBtn.onclick = (ev) => {
+            ev.stopPropagation(); // שלא יבחר את הטופיק בלחיצה על כפתור
+            deleteTopic(topic.id);
+        };
 
         li.appendChild(nameEl);
         li.appendChild(metaEl);
+        li.appendChild(delBtn);
 
         li.onclick = () => {
             selectedTopicId = topic.id;
@@ -313,6 +322,37 @@ async function deleteCard(cardId) {
     }
 }
 
+// Delete topic (and all its cards)
+async function deleteTopic(topicId) {
+    if (!confirm(`Delete topic #${topicId} and ALL its cards?`)) return;
+
+    const { status, data } = await fetchJSON(`/topics/${topicId}`, {
+        method: "DELETE",
+    });
+
+    if (status === 200) {
+        showToast("Topic deleted", "success");
+
+        // אם מחקנו את הטופיק שנבחר כרגע — לאפס בחירה
+        if (selectedTopicId === topicId) {
+            selectedTopicId = null;
+            currentCards = [];
+            updateTopicsSelection();
+
+            const container = document.getElementById("cardsContainer");
+            if (container) {
+                container.innerHTML = "<p class='placeholder'>Select a topic</p>";
+            }
+        }
+
+        await loadTopics();
+    } else {
+        const msg = data && data.error ? data.error : `Error deleting topic (${status})`;
+        showToast(msg, "error");
+    }
+}
+
+
 // Create topic + cards
 async function createTopicAndCards() {
     const topicInput = document.getElementById("topicInput");
@@ -349,16 +389,25 @@ async function createTopicAndCards() {
 
     createBtn.disabled = false;
 
-    if (status === 201) {
-        statusEl.textContent = `Created topic "${data.topic.name}" with ${data.cards.length} cards.`;
+    if (status === 201 || status === 200) {
+    // הודעה מהשרת (אם קיימת)
+        if (data.message) {
+            showToast(data.message, "info");
+            statusEl.textContent = data.message;
+    }   else {
+            const created = data.created_card_types?.length || 0;
+            showToast(`Created ${created} new card(s)`, "success");
+            statusEl.textContent = `Created ${created} new card(s).`;
+    }
+
         topicInput.value = "";
-        showToast("Topic created", "success");
         await loadTopics();
-    } else {
+    }else {
         const msg = data && data.error ? data.error : "Unknown error";
         statusEl.textContent = `Error (${status}): ${msg}`;
         showToast(`Error creating topic (${status})`, "error");
     }
+
 }
 
 // Global summaries

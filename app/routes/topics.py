@@ -7,7 +7,7 @@ from ..constants import VALID_CARD_TYPES
 from .. import db
 from ..utils.auth_utils import require_user
 from ..utils.auth_utils import get_current_user 
-
+from app.services.content_generator import AI_ENABLED
 
 
 topics_bp = Blueprint("topics", __name__)
@@ -40,8 +40,9 @@ def create_topic(current_user):
 
     topic_name = data["topic"].strip()
     formats = data.get("formats", [])
-    mode = data.get("mode", "dummy")   # נשאר כמו קודם
-
+    mode = data.get("mode", "ai") 
+    
+    
     if not topic_name:
         return jsonify({"error": "Topic name cannot be empty"}), 400
 
@@ -61,36 +62,67 @@ def create_topic(current_user):
         name=topic_name,
         user_id=current_user.id
     ).first()
-    if existing:
-        return jsonify({"error": "Topic already exists for this user"}), 409
 
-    # Create the topic
-    new_topic = Topic(
-        name=topic_name,
-        user_id=current_user.id,   # ← קישור למשתמש
+    if existing:
+        topic = existing
+        is_new_topic = False
+    else:
+        topic = Topic(
+            name=topic_name,
+            user_id=current_user.id,
     )
-    db.session.add(new_topic)
-    db.session.flush()  # so new_topic.id is available
+        db.session.add(topic)
+        db.session.flush()
+        is_new_topic = True
+
+    existing_card_types = {
+        c.card_type
+        for c in Card.query.filter_by(topic_id=topic.id).all()
+    }
+
 
     created_cards = []
+    created_types = []
+    skipped_types = []
 
     for card_type in formats:
-        content = generate_content(topic_name, card_type, mode=mode)
+        if card_type in existing_card_types:
+            skipped_types.append(card_type)
+            continue
+
+        content = generate_content(topic.name, card_type, mode=mode)
         card = Card(
-            topic_id=new_topic.id,
+            topic_id=topic.id,
             card_type=card_type,
             content=content,
-        )
+    )
         db.session.add(card)
         created_cards.append(card)
+        created_types.append(card_type)
 
+    if not created_cards:
+        response = {
+        "topic": topic.to_dict(),
+        "cards": [],
+        "is_new_topic": is_new_topic,
+        "created_card_types": [],
+        "skipped_card_types": skipped_types,
+        "message": "All requested card types already exist for this topic."
+    }
+        return jsonify(response), 200
+    
     db.session.commit()
 
     response = {
-        "topic": new_topic.to_dict(),
+        "topic": topic.to_dict(),
         "cards": [c.to_dict() for c in created_cards],
+        "is_new_topic": is_new_topic,
+        "created_card_types": created_types,
+        "skipped_card_types": skipped_types,
     }
-    return jsonify(response), 201
+    status_code = 201 if is_new_topic else 200
+    return jsonify(response), status_code
+
 
 
 
@@ -120,3 +152,17 @@ def get_topic_cards(current_user, topic_id):
 
     cards = query.all()
     return jsonify([c.to_dict() for c in cards]), 200
+
+
+
+@topics_bp.route("/topics/<int:topic_id>", methods=["DELETE"])
+@require_user
+def delete_topic(current_user, topic_id):
+    topic = Topic.query.filter_by(id=topic_id, user_id=current_user.id).first()
+    if not topic:
+        return jsonify({"error": "Topic not found"}), 404
+
+    db.session.delete(topic)
+    db.session.commit()
+    return jsonify({"message": "Topic deleted", "topic_id": topic_id}), 200
+

@@ -1,17 +1,21 @@
 # app/services/content_generator.py
 
-from ..config import OPENAI_API_KEY, OPENAI_MODEL, AI_ENABLED
+from ..config import AI_ENABLED, AI_PROVIDER, GEMINI_API_KEY, GEMINI_MODEL
 
 try:
-    from openai import OpenAI
+    import google.generativeai as genai
 except ImportError:
-    OpenAI = None
+    genai = None
 
+print("AI_ENABLED:", AI_ENABLED)
+print("AI_PROVIDER:", AI_PROVIDER)
+print("GEMINI_API_KEY loaded:", bool(GEMINI_API_KEY))
 
-# initialize client only if allowed and available
-client = None
-if AI_ENABLED and OpenAI is not None:
-    client = OpenAI(api_key=OPENAI_API_KEY)
+# initialize gemini only if allowed and available
+gemini_model = None
+if AI_ENABLED and AI_PROVIDER == "gemini" and genai is not None and GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    gemini_model = genai.GenerativeModel(GEMINI_MODEL)
 
 
 def generate_dummy_content(topic: str, card_type: str) -> str:
@@ -33,48 +37,54 @@ def generate_dummy_content(topic: str, card_type: str) -> str:
 
 def generate_ai_content(topic: str, card_type: str) -> str:
     """
-    Try generating real content using OpenAI API.
-    If the API is unavailable or errors occur, fallback to dummy content.
+    Generate content using Gemini.
+    If unavailable or errors occur, fallback to dummy content.
     """
-    if client is None:
+    if (
+        not AI_ENABLED
+        or AI_PROVIDER != "gemini"
+        or genai is None
+        or not GEMINI_API_KEY
+        or gemini_model is None
+    ):
         return generate_dummy_content(topic, card_type)
 
     system_prompt = (
         "You generate concise and structured study materials: flashcards, "
-        "summaries, quizzes, tasks, usecases and mindmaps."
+        "summaries, quizzes, tasks, usecases and mindmaps. Follow the user's requested output format exactly"
     )
+    format_rules = {
+        "flashcard": 'Return ONLY exactly two lines:\nQ: ...\nA: ...',
+        "summary": "Return ONLY 3–6 bullet points. Each line must start with '- '.",
+        "quiz": "Return ONLY:\nQuestion: ...\nA) ...\nB) ...\nC) ...\nD) ...\nCorrect: <A|B|C|D>",
+        "task": "Return ONLY a small hands-on exercise as 3–6 numbered steps.",
+        "usecase": "Return ONLY 1–2 paragraphs. No lists unless needed.",
+        "mindmap": "Return ONLY a text outline:\nTopic\n- Subtopic A\n  - Detail 1\n- Subtopic B",
+    }
 
     user_prompt = f"""
-Create a {card_type} for the topic: "{topic}".
+Generate ONLY a {card_type} for the topic: "{topic}".
 
-Required format:
-- flashcard: "Q: ... / A: ..."
-- summary: 3–6 bullet points
-- quiz: question + 4 options + mark correct answer
-- task: small hands-on exercise
-- usecase: 1–2 paragraphs
-- mindmap: text outline like:
-  Topic
-  - Subtopic A
-    - Detail 1
-  - Subtopic B
+STRICT RULES:
+- Output must contain ONLY the {card_type} content.
+- Do NOT include sections for other card types (no Flashcard/Summary/Quiz headers).
+- No intro text like "Okay, here's...".
+- Follow the format exactly.
+
+FORMAT:
+{format_rules.get(card_type, "Return ONLY relevant content.")}
 """
 
-    try:
-        completion = client.chat.completions.create(
-            model=OPENAI_MODEL,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            temperature=0.7,
-        )
 
-        content = completion.choices[0].message.content
-        return content.strip()
+    try:
+        response = gemini_model.generate_content(
+            f"SYSTEM:\n{system_prompt}\n\nUSER:\n{user_prompt}"
+        )
+        content = getattr(response, "text", "") or ""
+        return content.strip() or generate_dummy_content(topic, card_type)
 
     except Exception as e:
-        # fallback: avoid crashing the app
+        print("GEMINI ERROR:", repr(e))
         return generate_dummy_content(topic, card_type)
 
 
