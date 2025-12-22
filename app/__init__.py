@@ -2,6 +2,7 @@
 
 from flask import Flask, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
 
 from .config import (
     SQLALCHEMY_DATABASE_URI,
@@ -56,9 +57,8 @@ def create_app():
 
     @app.route("/health", methods=["GET"])
     def health():
-        """בדיקת חיים ל-DevOps (כולל DB)."""
         try:
-            db.session.execute("SELECT 1")
+            db.session.execute(text("SELECT 1"))
             return jsonify({"status": "ok", "db": "ok"}), 200
         except Exception as e:
             return jsonify({"status": "error", "db": "down", "message": str(e)}), 503
