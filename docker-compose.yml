@@ -40,6 +40,26 @@ services:
     networks:
       - flashcards_net
 
+  test:
+    build:
+      context: .
+      dockerfile: test.Dockerfile
+    networks:
+      - flashcards_net
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      flask_app:
+        condition: service_started
+    environment:
+      BASE_URL: "http://flask_app:5000"
+      TEST_PATH: "/health"
+      RETRIES: "60"
+      SLEEP_SEC: "1"
+      TIMEOUT_SEC: "5"
+    profiles: ["test"]
+
+
 networks:
   flashcards_net:
     driver: bridge
