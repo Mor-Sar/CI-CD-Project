@@ -56,8 +56,13 @@ def create_app():
 
     @app.route("/health", methods=["GET"])
     def health():
-        """בדיקת חיים פשוטה ל-DevOps."""
-        return jsonify({"status": "ok"}), 200
+        """בדיקת חיים ל-DevOps (כולל DB)."""
+        try:
+            db.session.execute("SELECT 1")
+            return jsonify({"status": "ok", "db": "ok"}), 200
+        except Exception as e:
+            return jsonify({"status": "error", "db": "down", "message": str(e)}), 503
+
 
     # יצירת טבלאות אם לא קיימות
     with app.app_context():

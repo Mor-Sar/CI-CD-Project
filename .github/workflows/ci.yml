@@ -16,7 +16,7 @@ jobs:
 
       - name: Create .env for CI (from Secrets)
         run: |
-          cat > .env << 'EOF'
+          cat > .env << EOF
           MYSQL_DB=flashcards
           MYSQL_USER=flashcards_user
           MYSQL_PASSWORD=flashcards_pass
@@ -40,7 +40,7 @@ jobs:
       - name: Wait for app and smoke test
         run: |
           for i in {1..30}; do
-            if curl -fsS http://localhost/ > /dev/null; then
+            if curl -fsS http://localhost/health > /dev/null; then
               echo "App is up"
               exit 0
             fi
