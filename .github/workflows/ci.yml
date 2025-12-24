@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: ["sarah-new"]
+    branches: ["moriya"]
   pull_request:
-    branches: ["sarah-new"]
+    branches: ["moriya"]
 
 jobs:
   compose-smoke-test:
