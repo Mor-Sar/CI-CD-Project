@@ -1,53 +1,55 @@
-name: CI - Test and Notify
+name: CI
 
 on:
   push:
-  workflow_dispatch:
+    branches: ["sarah-new"]
+  pull_request:
+    branches: ["sarah-new"]
 
 jobs:
-  test:
+  compose-smoke-test:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run docker-compose tests
+      - name: Create .env for CI (from Secrets)
         run: |
-          docker compose --profile test up --build --abort-on-container-exit --exit-code-from test
+          cat > .env << EOF
+          MYSQL_DB=flashcards
+          MYSQL_USER=flashcards_user
+          MYSQL_PASSWORD=flashcards_pass
+          MYSQL_HOST=mariadb
+          MYSQL_PORT=3306
+          JWT_SECRET=ci-secret
+          JWT_EXPIRES_MINUTES=60
+          AI_PROVIDER=gemini
+          GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL=gemini-2.0-flash
+          OPENAI_API_KEY=dummy
+          OPENAI_MODEL=gpt-4.1-mini
+          EOF
 
-      - name: Print success message
-        run: echo "success"
+      - name: Build and start
+        run: docker compose up -d --build
 
-      - name: Cleanup
+      - name: Show status
+        run: docker compose ps
+
+      - name: Wait for app and smoke test
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost/health > /dev/null; then
+              echo "App is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "App did not become ready"
+          docker compose logs --tail=200
+          exit 1
+
+      - name: Shutdown
         if: always()
-        run: |
-          docker compose down -v --remove-orphans
-
-  notify_email_on_failure:
-    needs: test
-    runs-on: ubuntu-latest
-    if: failure()
-
-    steps:
-      - name: Send failure email
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: ${{ secrets.SMTP_SERVER }}
-          server_port: ${{ secrets.SMTP_PORT }}
-          username: ${{ secrets.SMTP_USERNAME }}
-          password: ${{ secrets.SMTP_PASSWORD }}
-          subject: "Test Failed: ${{ github.repository }} @ ${{ github.ref_name }}"
-          to: ${{ secrets.ALERT_EMAIL_TO }}
-          from: ${{ secrets.ALERT_EMAIL_FROM }}
-          body: |
-            Tests failed in the CI pipeline.
-            
-            Failure Details:
-            - Repository: ${{ github.repository }}
-            - Branch: ${{ github.ref_name }}
-            - Commit: ${{ github.sha }}
-            - Actor: ${{ github.actor }}
-            
-            View full logs and failure details:
-            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: docker compose down -v
