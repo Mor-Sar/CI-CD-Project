@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: ["sarah-new"]
+    branches: ["moriya"]
   pull_request:
-    branches: ["sarah-new"]
+    branches: ["moriya"]
 
 jobs:
   compose-smoke-test:
@@ -31,7 +31,7 @@ jobs:
           OPENAI_MODEL=gpt-4.1-mini
           EOF
 
-      - name: Build and start
+      - name: Build and starts
         run: docker compose up -d --build
 
       - name: Show status
@@ -53,6 +53,7 @@ jobs:
       - name: Shutdown
         if: always()
         run: docker compose down -v
+<<<<<<< HEAD
 
   notify_startup_failure:
     needs: compose-smoke-test
@@ -81,3 +82,5 @@ jobs:
             
             View full logs:
             https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+=======
+>>>>>>> 5b5563f512100419288082abeecf5bc8f78faaef
