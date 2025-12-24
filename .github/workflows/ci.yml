@@ -31,7 +31,7 @@ jobs:
           OPENAI_MODEL=gpt-4.1-mini
           EOF
 
-      - name: Build and start
+      - name: Build and starts
         run: docker compose up -d --build
 
       - name: Show status
