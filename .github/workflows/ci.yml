@@ -48,8 +48,16 @@ jobs:
           done
           echo "App did not become ready"
           docker compose logs --tail=200
+          
+          # שליחת מייל במקרה של כשלון
+          echo "App failed to start after 30 attempts" | mail -s "App Startup Failed" moriyakatz@gmail.com
+
           exit 1
 
       - name: Shutdown
         if: always()
         run: docker compose down -v
+
+      # שגיאה מכוונת: אם תסיר את השורה הזו, השגיאה תיפתר
+      - name: Intentional failure (remove this line later)
+        run: exit 1
