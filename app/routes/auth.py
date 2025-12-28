@@ -134,3 +134,6 @@ def me():
     user = User.query.get(data["user_id"])
     if not user:
         return jsonify({"error": "user not found"}), 404
+    
+    return jsonify({"user": user.to_dict()}), 200
+
