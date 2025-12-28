@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: ["moriya"]
+    branches: ["sarah-new"]
   pull_request:
-    branches: ["moriya"]
+    branches: ["sarah-new"]
 
 jobs:
   compose-smoke-test:
@@ -40,25 +40,36 @@ jobs:
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Smoke test - register, login, create topic & cards
+      # 1) HEALTH CHECK (נפרד)
+      - name: Health check - /health responds
         run: |
           set -euo pipefail
 
-          echo "Waiting for app health"
           for i in {1..30}; do
             if curl -fsS http://localhost/health > /dev/null; then
               echo "Health OK"
-              break
+              exit 0
             fi
             sleep 2
           done
+
+          echo "Health endpoint did not become ready"
+          docker compose logs --tail=200 flask_app
+          docker compose logs --tail=200 nginx
+          docker compose logs --tail=200 mariadb
+          exit 1
+
+      # 2) AUTH SETUP (נפרד)
+      - name: Auth setup - register + login + validate token
+        run: |
+          set -euo pipefail
 
           TS=$(date +%s)
           USERNAME="ci_user_$TS"
           EMAIL="ci_$TS@example.com"
           PASSWORD="ci_password_$TS"
 
-          echo "Register user"
+          echo "Register"
           curl -sS -X POST http://localhost/auth/register \
             -H "Content-Type: application/json" \
             -d "{\"username\":\"$USERNAME\",\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}" \
@@ -71,16 +82,28 @@ jobs:
 
           TOKEN=$(echo "$LOGIN_RESP" | jq -r '.token')
           if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
-            echo "Failed to get token"
+            echo "ERROR: missing .token in login response"
             echo "$LOGIN_RESP"
+            docker compose logs --tail=200 flask_app
             exit 1
           fi
 
-          echo "Validate token"
-          curl -fsS http://localhost/auth/me \
-            -H "Authorization: Bearer $TOKEN" \
-            | jq .
+          echo "Validate token via /auth/me"
+          if ! curl -fsS http://localhost/auth/me -H "Authorization: Bearer $TOKEN" | jq .; then
+            echo "/auth/me failed - showing logs"
+            docker compose logs --tail=200 flask_app
+            exit 1
+          fi
 
+          # Persist token for later steps
+          echo "TOKEN=$TOKEN" >> $GITHUB_ENV
+
+      # 3) SMOKE TEST חיובי (נפרד)
+      - name: Smoke test - create topic + cards and verify skip logic
+        run: |
+          set -euo pipefail
+
+          TS=$(date +%s)
           TOPIC="ci-topic-$TS"
 
           echo "Create topic with cards"
@@ -92,8 +115,16 @@ jobs:
           echo "$CREATE_RESP" | jq .
 
           CREATED=$(echo "$CREATE_RESP" | jq '.created_card_types | length')
+          SKIPPED=$(echo "$CREATE_RESP" | jq '.skipped_card_types | length')
+
           if [ "$CREATED" -ne 2 ]; then
-            echo "Expected 2 cards to be created"
+            echo "ERROR: expected 2 created_card_types, got $CREATED"
+            docker compose logs --tail=200 flask_app
+            exit 1
+          fi
+          if [ "$SKIPPED" -ne 0 ]; then
+            echo "ERROR: expected 0 skipped_card_types on first create, got $SKIPPED"
+            docker compose logs --tail=200 flask_app
             exit 1
           fi
 
@@ -108,8 +139,14 @@ jobs:
           CREATED2=$(echo "$REPEAT_RESP" | jq '.created_card_types | length')
           SKIPPED2=$(echo "$REPEAT_RESP" | jq '.skipped_card_types | length')
 
-          if [ "$CREATED2" -ne 0 ] || [ "$SKIPPED2" -ne 2 ]; then
-            echo "Skip logic failed"
+          if [ "$CREATED2" -ne 0 ]; then
+            echo "ERROR: expected 0 created_card_types on repeat, got $CREATED2"
+            docker compose logs --tail=200 flask_app
+            exit 1
+          fi
+          if [ "$SKIPPED2" -ne 2 ]; then
+            echo "ERROR: expected 2 skipped_card_types on repeat, got $SKIPPED2"
+            docker compose logs --tail=200 flask_app
             exit 1
           fi
 
