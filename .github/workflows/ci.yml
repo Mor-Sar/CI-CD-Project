@@ -14,7 +14,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Create .env for CI (from Secrets)
+      - name: Create .env for CI
         run: |
           cat > .env << EOF
           MYSQL_DB=flashcards
@@ -25,39 +25,96 @@ jobs:
           JWT_SECRET=ci-secret
           JWT_EXPIRES_MINUTES=60
           AI_PROVIDER=gemini
-          GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY=dummy
           GEMINI_MODEL=gemini-2.0-flash
           OPENAI_API_KEY=dummy
           OPENAI_MODEL=gpt-4.1-mini
           EOF
 
-      - name: Build and starts
+      - name: Build and start services
         run: docker compose up -d --build
 
-      - name: Show status
+      - name: Show container status
         run: docker compose ps
 
-      - name: Wait for app and smoke test
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Smoke test - register, login, create topic & cards
         run: |
+          set -euo pipefail
+
+          echo "Waiting for app health"
           for i in {1..30}; do
-            if curl -fsS http://localhost/ > /dev/null; then
-              echo "App is up"
-              exit 0
+            if curl -fsS http://localhost/health > /dev/null; then
+              echo "Health OK"
+              break
             fi
             sleep 2
           done
-          echo "App did not become ready"
-          docker compose logs --tail=200
-          
-          # שליחת מייל במקרה של כשלון
-          echo "App failed to start after 30 attempts" | mail -s "App Startup Failed" moriyakatz@gmail.com
 
-          exit 1
+          TS=$(date +%s)
+          USERNAME="ci_user_$TS"
+          EMAIL="ci_$TS@example.com"
+          PASSWORD="ci_password_$TS"
+
+          echo "Register user"
+          curl -sS -X POST http://localhost/auth/register \
+            -H "Content-Type: application/json" \
+            -d "{\"username\":\"$USERNAME\",\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}" \
+            | jq . || true
+
+          echo "Login"
+          LOGIN_RESP=$(curl -fsS -X POST http://localhost/auth/login \
+            -H "Content-Type: application/json" \
+            -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}")
+
+          TOKEN=$(echo "$LOGIN_RESP" | jq -r '.token')
+          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+            echo "Failed to get token"
+            echo "$LOGIN_RESP"
+            exit 1
+          fi
+
+          echo "Validate token"
+          curl -fsS http://localhost/auth/me \
+            -H "Authorization: Bearer $TOKEN" \
+            | jq .
+
+          TOPIC="ci-topic-$TS"
+
+          echo "Create topic with cards"
+          CREATE_RESP=$(curl -fsS -X POST http://localhost/topics \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"topic\":\"$TOPIC\",\"formats\":[\"flashcard\",\"summary\"],\"mode\":\"dummy\"}")
+
+          echo "$CREATE_RESP" | jq .
+
+          CREATED=$(echo "$CREATE_RESP" | jq '.created_card_types | length')
+          if [ "$CREATED" -ne 2 ]; then
+            echo "Expected 2 cards to be created"
+            exit 1
+          fi
+
+          echo "Repeat request - expect skip"
+          REPEAT_RESP=$(curl -fsS -X POST http://localhost/topics \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"topic\":\"$TOPIC\",\"formats\":[\"flashcard\",\"summary\"],\"mode\":\"dummy\"}")
+
+          echo "$REPEAT_RESP" | jq .
+
+          CREATED2=$(echo "$REPEAT_RESP" | jq '.created_card_types | length')
+          SKIPPED2=$(echo "$REPEAT_RESP" | jq '.skipped_card_types | length')
+
+          if [ "$CREATED2" -ne 0 ] || [ "$SKIPPED2" -ne 2 ]; then
+            echo "Skip logic failed"
+            exit 1
+          fi
+
+          echo "Smoke test passed"
 
       - name: Shutdown
         if: always()
         run: docker compose down -v
-
-      # שגיאה מכוונת: אם תסיר את השורה הזו, השגיאה תיפתר
-      #- name: Intentional failure (remove this line later)
-      #  run: exit 1
