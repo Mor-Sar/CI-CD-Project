@@ -179,7 +179,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/flashcards
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/ci-cd
           tags: |
             type=raw,value=latest
             type=sha,format=short
