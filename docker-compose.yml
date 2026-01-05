@@ -5,10 +5,10 @@ services:
     image: mariadb:11
     container_name: mariadb_db
     environment:
-      MARIADB_DATABASE: flashcards
-      MARIADB_USER: flashcards_user
-      MARIADB_PASSWORD: flashcards_pass
-      MARIADB_ROOT_PASSWORD: root_pass_change_me
+      MARIADB_DATABASE: ${MYSQL_DB}
+      MARIADB_USER: ${MYSQL_USER}
+      MARIADB_PASSWORD: ${MYSQL_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     volumes:
       - mariadb_data:/var/lib/mysql
     networks:
