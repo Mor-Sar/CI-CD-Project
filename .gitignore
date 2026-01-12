@@ -3,11 +3,12 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
-
+*.pyc
 # Virtual env
 venv/
 .env/
 .env 
+.env.*
 
 
 
