@@ -377,7 +377,7 @@ async function createTopicAndCards() {
     }
 
     const modeRadio = document.querySelector('input[name="mode"]:checked');
-    const mode = modeRadio ? modeRadio.value : "dummy";
+    const mode = modeRadio ? modeRadio.value : "ai";
 
     statusEl.textContent = "Creating topic and cards...";
     createBtn.disabled = true;
