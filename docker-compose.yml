@@ -1,7 +1,7 @@
 services:
   mariadb:
     image: mariadb:11
-    container_name: mariadb_db
+    restart: unless-stopped
     environment:
       MARIADB_DATABASE: ${MYSQL_DB}
       MARIADB_USER: ${MYSQL_USER}
@@ -19,10 +19,13 @@ services:
 
   flask_app:
     build: .
+    restart: unless-stopped 
     expose:
       - "5000"
     env_file:
       - .env
+    environment:
+      DB_HOST: mariadb
     depends_on:
       mariadb:
         condition: service_healthy
@@ -39,7 +42,8 @@ services:
       retries: 30
 
   nginx:
-    image: nginx:latest
+    image: nginx:1.27
+    restart: unless-stopped
     ports:
       - "80:80"
     volumes:
