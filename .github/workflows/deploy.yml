@@ -19,4 +19,28 @@ jobs:
           script: |
             set -e
             cd ~/CI-CD-Project
+
+            echo "Creating .env from GitHub Secrets"
+
+            cat > .env << 'EOF'
+            MYSQL_HOST=${{ secrets.MYSQL_HOST }}
+            MYSQL_PORT=${{ secrets.MYSQL_PORT }}
+            MYSQL_DB=${{ secrets.MYSQL_DB }}
+            MYSQL_USER=${{ secrets.MYSQL_USER }}
+            MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+            MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_EXPIRES_MINUTES=${{ secrets.JWT_EXPIRES_MINUTES }}
+
+            AI_PROVIDER=${{ secrets.AI_PROVIDER }}
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            GEMINI_MODEL=${{ secrets.GEMINI_MODEL }}
+
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+            OPENAI_MODEL=${{ secrets.OPENAI_MODEL }}
+            EOF
+
+            chmod 600 .env
+
             ./deploy.sh
