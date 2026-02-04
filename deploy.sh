@@ -13,9 +13,13 @@ git pull origin "$BRANCH"
 docker compose up -d --build
 docker compose ps
 
-echo "Waiting for /health..."
+echo "Waiting for /health (via nginx on localhost:80)..."
 for i in {1..60}; do
-  if curl -fsS http://localhost:5000/health > /dev/null; then
+  if python3 - << 'PY' >/dev/null 2>&1
+import urllib.request
+urllib.request.urlopen("http://localhost/health", timeout=2)
+PY
+  then
     echo "Health OK"
     echo "== Deploy finished =="
     exit 0
@@ -28,5 +32,3 @@ docker compose logs --tail=200 flask_app || true
 docker compose logs --tail=200 nginx || true
 docker compose logs --tail=200 mariadb || true
 exit 1
-
-echo "== Deploy finished =="
