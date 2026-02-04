@@ -15,7 +15,7 @@ docker compose ps
 
 echo "Waiting for /health..."
 for i in {1..60}; do
-  if curl -fsS http://localhost/health > /dev/null; then
+  if curl -fsS http://localhost:5000/health > /dev/null; then
     echo "Health OK"
     echo "== Deploy finished =="
     exit 0
