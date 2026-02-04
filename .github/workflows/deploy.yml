@@ -43,4 +43,4 @@ jobs:
 
             chmod 600 .env
 
-            ./deploy.sh
+            ./deploy.sh "${{ github.ref_name }}"
