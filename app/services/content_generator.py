@@ -3,7 +3,7 @@
 from ..config import AI_ENABLED, AI_PROVIDER, GEMINI_API_KEY, GEMINI_MODEL
 
 try:
-    import google as genai
+    from google import genai
 except ImportError:
     genai = None
 
