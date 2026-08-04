@@ -9,7 +9,6 @@ on:
 jobs:
   compose-smoke-test:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/moriya' || github.ref == 'refs/heads/sarah-new2')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -157,6 +156,7 @@ jobs:
 
   publish-image:
     name: Build & Push Docker image
+    needs: compose-smoke-test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 

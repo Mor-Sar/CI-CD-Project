@@ -1,12 +1,16 @@
 name: Deploy to EC2
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
     branches:
       - main
 
 jobs:
   deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -23,6 +27,7 @@ jobs:
             echo "Creating .env from GitHub Secrets"
 
             cat > .env << 'EOF'
+            APP_ENV=prod
             MYSQL_HOST=${{ secrets.MYSQL_HOST }}
             MYSQL_PORT=${{ secrets.MYSQL_PORT }}
             MYSQL_DB=${{ secrets.MYSQL_DB }}
@@ -43,4 +48,4 @@ jobs:
 
             chmod 600 .env
 
-            ./deploy.sh "${{ github.ref_name }}"
+            ./deploy.sh "${{ github.event.workflow_run.head_branch }}"
