@@ -3,23 +3,20 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
-*.pyc
-# Virtual env
+
+# Virtual environment
 venv/
-.env/
-.env 
+
+# Environment variables
+.env
 .env.*
+!.env.example
 
-
-
-# SQLite DB
+# SQLite databases
 app.db
 *.db
 *.sqlite
 *.sqlite3
 
-# VSCode
+# VS Code
 .vscode/
-
-# __pycache__ everywhere
-**/__pycache__/

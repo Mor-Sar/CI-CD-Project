@@ -3,7 +3,7 @@
 from ..config import AI_ENABLED, AI_PROVIDER, GEMINI_API_KEY, GEMINI_MODEL
 
 try:
-    import google.generativeai as genai
+    from google import genai
 except ImportError:
     genai = None
 
@@ -14,9 +14,7 @@ print("GEMINI_API_KEY loaded:", bool(GEMINI_API_KEY))
 # initialize gemini only if allowed and available
 gemini_model = None
 if AI_ENABLED and AI_PROVIDER == "gemini" and genai is not None and GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-    gemini_model = genai.GenerativeModel(GEMINI_MODEL)
-
+    gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 
 def generate_dummy_content(topic: str, card_type: str) -> str:
     if card_type == "flashcard":
@@ -45,7 +43,7 @@ def generate_ai_content(topic: str, card_type: str) -> str:
         or AI_PROVIDER != "gemini"
         or genai is None
         or not GEMINI_API_KEY
-        or gemini_model is None
+        or gemini_client is None
     ):
         return generate_dummy_content(topic, card_type)
 
@@ -77,14 +75,15 @@ FORMAT:
 
 
     try:
-        response = gemini_model.generate_content(
-            f"SYSTEM:\n{system_prompt}\n\nUSER:\n{user_prompt}"
-        )
+        response = gemini_client.models.generate_content(
+    model=GEMINI_MODEL,
+    contents=f"SYSTEM:\n{system_prompt}\n\nUSER:\n{user_prompt}",
+    )
         content = getattr(response, "text", "") or ""
         return content.strip() or generate_dummy_content(topic, card_type)
 
     except Exception as e:
-        print("GEMINI ERROR:", repr(e))
+        print("GEMINI ERROR:", repr(e), flush=True)
         return generate_dummy_content(topic, card_type)
 
 
