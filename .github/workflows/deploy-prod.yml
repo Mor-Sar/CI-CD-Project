@@ -48,4 +48,4 @@ jobs:
 
             chmod 600 .env
 
-            ./deploy.sh "${{ github.event.workflow_run.head_branch }}"
+            bash deploy.sh "${{ github.event.workflow_run.head_branch }}"
