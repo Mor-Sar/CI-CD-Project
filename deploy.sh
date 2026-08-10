@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BRANCH="${1:-sarah-new2}"
+BRANCH="${1:-main}"
 
 echo "== Deploy started (branch: $BRANCH) =="
 cd "$(dirname "$0")"
